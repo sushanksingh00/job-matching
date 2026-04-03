@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job-Matching</title>
+    <style>
+      .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      button{
+        padding: 10px 40px;
+        font-size: 24px;
+      }
+
+      .item {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 16px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body>
+  <h1 class="text-center">Check if the Job Matches Your Resume</h1>
+  <div class="form-container">
+    <div class="row">
+      <h3>Paste the job description here:</h3>
+      <textarea id="JobDesc" name="job_desc" rows="6" cols="40"></textarea>
+    </div>
+    <div class="row">
+      <h3>Upload your resume here:</h3>
+      <input id="ResumeFile" type="file" name="file" accept="application/pdf" />
+    </div>
+    <div>
+      <button type="button" onclick="getRecommendations()">Upload</button>
+    </div>
+  </div>
+
+  <div id="results" class="text-center" style="margin-top: 20px;"></div>
+
+  <script>
+    async function getRecommendations(){
+      const API_URL = 'http://127.0.0.1:5050/upload';
+
+      const job = document.getElementById("JobDesc").value;
+      const fileInput = document.getElementById("ResumeFile");
+      const results = document.getElementById("results");
+
+      results.innerHTML = "Uploading...";
+
+      if (!job || job.trim().length === 0) {
+        results.innerHTML = "<p style='color:red;'>Please paste a job description.</p>";
+        return;
+      }
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        results.innerHTML = "<p style='color:red;'>Please choose a resume PDF.</p>";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('job_desc', job);
+      formData.append('file', fileInput.files[0]);
+      console.log(formData);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: formData
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+          ? await response.json()
+          : { detail: await response.text() };
+
+        results.innerHTML = "";
+
+        if (!response.ok) {
+          results.innerHTML = `<p style='color:red;'>${data.detail || 'Upload failed'}</p>`;
+          return;
+        }
+
+        const score = typeof data.final_score === 'number' ? data.final_score : Number(data.final_score);
+        const matched = data?.feedback?.matched || [];
+        const missing = data?.feedback?.missing || [];
+
+        let card = `
+          <div class="item">
+            <h2>Match Score: ${Number.isFinite(score) ? score.toFixed(3)*100 : data.final_score*100}%</h2>
+            <h3>Matched Skills</h3>
+            <p>${matched.length ? matched.join(', ') : '(none)'}</p>
+            <h3>Missing Skills</h3>
+            <p>${missing.length ? missing.join(', ') : '(none)'}</p>
+          </div>
+        `;
+
+        results.innerHTML += card;
+      } catch (err) {
+        results.innerHTML = "<p style='color:red;'>Network error. Is your backend running on 127.0.0.1:5050?</p>";
+      }
+    }
+  </script>
+</body>
+</html>
