@@ -108,7 +108,7 @@ def remove_stop_words(text):
     text = text.replace('\n',' ')
     text = re.sub(r'[^a-zA-Z ]', '', text)
     words = text.split()
-    words = [ps.stem(w) for w in words if w not in stop_words]
+    words = [w for w in words if w not in stop_words]
     return ' '.join(words)
 
 
@@ -148,7 +148,7 @@ def find_similarity(filepath, job_desc):
     job_skills = extract_skills(job)   
     match, lst = skill_matching(resume_skills, job_skills)
     # lst is set
-    final_score = 0.6 * sim + 0.4* match
+    final_score = 0.4 * sim + 0.6 * match
 
     feedback = generate_feedback(resume_skills, job_skills)
 
