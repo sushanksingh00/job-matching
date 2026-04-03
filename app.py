@@ -33,7 +33,7 @@ ps = PorterStemmer()
 
 
 programming_skills = [
-    "python", "java", "c", "c++", "javascript", "typescript",
+    "python", "java", "c++", "javascript", "typescript",
     "go", "rust", "kotlin", "swift", "php", "ruby", "scala",
     "bash", "matlab"
 ]
