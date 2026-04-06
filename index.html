@@ -5,57 +5,207 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Job-Matching</title>
     <style>
+      :root {
+        color-scheme: light;
+      }
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 28px 18px;
+        background: #fff;
+        color: #111;
+        font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      }
+
+      .page {
+        max-width: 920px;
+        margin: 0 auto;
+      }
+
+      .header {
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .sub {
+        margin: 0;
+        font-size: 13px;
+        color: #222;
+      }
+
+      .panel {
+        border: 1px solid #111;
+        border-radius: 14px;
+        padding: 18px;
+      }
+
       .form-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .label {
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 170px;
+        padding: 12px;
+        border: 1px solid #111;
+        border-radius: 12px;
+        font: inherit;
+        color: #111;
+        background: #fff;
+        resize: vertical;
+      }
+
+      input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #111;
+        border-radius: 12px;
+        background: #fff;
+        color: #111;
+      }
+
+      textarea:focus-visible,
+      input[type="file"]:focus-visible,
+      button:focus-visible {
+        outline: 2px solid #111;
+        outline-offset: 2px;
+      }
+
+      .actions {
         display: flex;
-        flex-direction: column;
-        gap: 15px;
+        align-items: center;
+        gap: 12px;
+        margin-top: 2px;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 12px;
         align-items: center;
       }
 
-      .text-center {
-        text-align: center;
+      .file-actions input[type="file"] {
+        flex: 1;
+        min-width: 0;
       }
-      .row {
-        display: flex;
-        align-items: center;
-        gap: 15px;
+
+      button {
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        border: 1px solid #111;
+        border-radius: 12px;
+        background: #111;
+        color: #fff;
+        cursor: pointer;
       }
-      button{
-        padding: 10px 40px;
-        font-size: 24px;
+
+      button:hover {
+        filter: brightness(0.95);
+      }
+
+      .results {
+        margin-top: 16px;
       }
 
       .item {
-        max-width: 900px;
-        margin: 0 auto;
+        max-width: 100%;
+        margin: 0;
         padding: 16px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
+        border: 1px solid #111;
+        border-radius: 14px;
+      }
+
+      .item h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+        font-weight: 800;
+        background: linear-gradient(90deg, #d7191c 0%, #fdae61 50%, #1a9641 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .item h3 {
+        margin: 14px 0 6px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .item p {
+        margin: 0;
+      }
+
+      @media (min-width: 860px) {
+        .form-container {
+          grid-template-columns: 1.3fr 0.7fr;
+          align-items: start;
+        }
+        .row.full {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .file-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
       }
     </style>
 </head>
 <body>
-  <h1 class="text-center">Check if the Job Matches Your Resume</h1>
-  <div class="form-container">
-    <div class="row">
-      <h3>Paste the job description here:</h3>
-      <textarea id="JobDesc" name="job_desc" rows="6" cols="40"></textarea>
+  <div class="page">
+    <div class="header">
+      <h1>Check your match</h1>
+      <p class="sub">Paste a job description and upload your resume PDF.</p>
     </div>
-    <div class="row">
-      <h3>Upload your resume here:</h3>
-      <input id="ResumeFile" type="file" name="file" accept="application/pdf" />
-    </div>
-    <div>
-      <button type="button" onclick="getRecommendations()">Upload</button>
+
+    <div class="panel">
+      <div class="form-container">
+        <div class="row full">
+          <div class="label">Job description</div>
+          <textarea id="JobDesc" name="job_desc" rows="8" placeholder="Paste the job description here..."></textarea>
+        </div>
+
+        <div class="row">
+          <div class="label">Resume (PDF)</div>
+          <div class="file-actions">
+            <input id="ResumeFile" type="file" name="file" accept="application/pdf" />
+            <button type="button" onclick="getRecommendations()">Analyze</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="results" class="results"></div>
     </div>
   </div>
 
-  <div id="results" class="text-center" style="margin-top: 20px;"></div>
-
   <script>
     async function getRecommendations(){
-      // const API_URL = 'https://job-matching-i7ec.onrender.com/upload';
-      const API_URL = 'http://0.0.0.0:8000/upload';
+      const API_URL = 'https://0.0.0.0:8000/job-matching-i7ec.onrender.com/upload';
+    //   const API_URL = 'http://0.0.0.0:8000/upload';
 
 
       const job = document.getElementById("JobDesc").value;
